@@ -5,10 +5,10 @@ This repo turns plain English business questions into **syntactically correct SQ
 
 ## Features
 
-✅ Convert plain-English questions into valid SQLite queries  
-✅ Execute queries directly on your local database  
-✅ Get natural-language explanations of query results  
-✅ Prompts are editable as standalone markdown files  
+--> Convert plain-English questions into valid SQLite queries  
+--> Execute queries directly on your local database  
+--> Get natural-language explanations of query results  
+--> Prompts are editable as standalone markdown files  
 
 ---
 
