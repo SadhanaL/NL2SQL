@@ -22,6 +22,58 @@ query_prompt_template = ChatPromptTemplate(
     [("system", system_message), ("system", "{format_instructions}"), ("user", user_prompt)]
 )
 
+def is_ambiguous(question: str) -> bool:
+    """
+    Determine if a natural language question is ambiguous for SQL generation.
+
+    This function checks if the input question is too vague or lacks sufficient detail
+    to generate a precise SQL query. It flags questions as ambiguous if they are too short,
+    contain superlative or ranking terms (e.g., "best", "top", "most"), and do not include
+    clarifying details such as a metric, numeric limit, grouping clause, or time context.
+
+    Parameters
+    ----------
+    question : str
+        The user's natural language question about the data.
+
+    Returns
+    -------
+    bool
+        True if the question is ambiguous and needs clarification, False otherwise.
+    """
+    text = question.lower()
+
+    min_word_count = 4
+    if len(text.split()) < min_word_count:
+        return True
+
+    # Only ranking/superlative words can be ambiguous.
+    vague_terms = ("best","top","most","highest","lowest","biggest","popular","trending","leading","fastest")
+    contains_vague = any(re.search(rf"\b{t}\b", text) for t in vague_terms)
+
+    # If there's no superlative/ranking word, it's not ambiguous (filter queries pass).
+    if not contains_vague:
+        return False
+
+    # For superlative/ranking queries, allow if any clarifier exists.
+    has_by_clause      = bool(re.search(r"\bby\s+[\w\- ]{2,}", text))                 # e.g., "by total spend"
+    has_numeric_limit  = bool(re.search(r"\b(?:top|best|bottom|highest|lowest|fastest)\s+\d+\b", text))
+    has_metric_term    = any(m in text for m in (
+        "revenue","sales","profit","spend","order value","aov","margin","gmv",
+        "units","quantity","orders","growth","grew","increase","decrease",
+        "rate","avg","average","mean"
+    ))
+    has_time_context   = bool(re.search(
+        r"""\b(20\d{2})\b
+            | \bq[1-4]\s*20\d{2}\b
+            | \b(last|past|this)\s+(year|quarter|month|week|day|\d+\s+(days|weeks|months|years))\b
+            | \bmonth[-\s]?over[-\s]?month\b
+        """, text, re.IGNORECASE | re.VERBOSE))
+
+    # Ambiguous only if NONE of the clarifiers are present.
+    has_clarity = has_metric_term or has_by_clause or has_numeric_limit or has_time_context
+    return not has_clarity
+
 def write_query(question: str) -> dict:
     """
     Generate a syntactically valid SQL query for the given business question using an LLM.
@@ -37,29 +89,6 @@ def write_query(question: str) -> dict:
         Dictionary containing the generated SQL query with key 'SQL'.
     """
     try:
-        # Detect ambiguous/vague questions
-        vague_terms = ["best", "top", "most", "highest", "biggest", "popular", "trending", "leading"]
-        text = question.lower()
-
-        # Basic vague term detection
-        contains_vague = any(term in text for term in vague_terms)
-
-        # Check for "by <metric>" clarification (e.g. "by revenue", "by total spend")
-        has_by_clause = bool(re.search(r"\bby\s+\w+", text))
-
-        # Check for numeric qualifier after 'top' or 'best' (e.g. "top 5")
-        has_numeric_limit = bool(re.search(r"\b(?:top|best)\s+\d+", text))
-
-        # Flag as vague only if no clarifying metric and no numeric limit
-        if contains_vague and not (has_by_clause or has_numeric_limit):
-            return {
-                "error": True,
-                "message": (
-                    "Your question includes a vague term like 'best', 'top', or 'most'. "
-                    "Could you clarify what metric defines 'best'? For example, highest revenue or most units sold?"
-                ),
-            }
-
         chain = query_prompt_template | llm | parser
 
         """Generate SQL query to fetch information."""
