@@ -20,11 +20,10 @@ def main():
     parser.add_argument("--execute", action="store_true", help="Execute the generated SQL query.")
     args = parser.parse_args()
 
-    # Prepare state
-    state = {"question": args.question, "SQL": "", "result": ""}
+    question = args.question
 
     # Generate SQL
-    sql_output = write_query(state["question"])
+    sql_output = write_query(question)
     print("\nGenerated SQL:\n", sql_output)
 
     # Execute SQL against the database 
