@@ -1,0 +1,8 @@
+pandas
+SQLAlchemy>=2.0
+openai
+langchain>=0.2
+langchain-community>=0.2
+langchain-openai>=0.2
+
+
