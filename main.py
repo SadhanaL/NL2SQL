@@ -1,5 +1,5 @@
 import argparse
-from app import write_query, execute_query
+from app import write_query, execute_query, is_ambiguous
 
 def main():
     """
@@ -22,14 +22,21 @@ def main():
 
     question = args.question
 
-    # Generate SQL
-    sql_output = write_query(question)
-    print("\nGenerated SQL:\n", sql_output)
+    # Check for ambiguity
+    ambiguity_check = is_ambiguous(question)
+    if ambiguity_check == True:
+        print("The question appears to be ambiguous or vague. Please provide more details.") 
+    else:
+        print("The question is clear. Proceeding to generate SQL.")
 
-    # Execute SQL against the database 
-    if args.execute:
-        result_output = execute_query(sql_output["SQL"])
-        print("\nQuery Result:\n", result_output)
+        # Generate SQL
+        sql_output = write_query(question)
+        print("\nGenerated SQL:\n", sql_output)
+
+        # Execute SQL against the database 
+        if args.execute:
+            result_output = execute_query(sql_output["SQL"])
+            print("\nQuery Result:\n", result_output)
 
 if __name__ == "__main__":
     main()
