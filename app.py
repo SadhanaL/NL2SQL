@@ -37,6 +37,7 @@ def write_query(question: str) -> dict:
         Dictionary containing the generated SQL query with key 'SQL'.
     """
     try:
+        # Detect ambiguous/vague questions
         vague_terms = ["best", "top", "most", "highest", "biggest", "popular", "trending", "leading"]
         text = question.lower()
 
