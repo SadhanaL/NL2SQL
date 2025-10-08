@@ -1,0 +1,4 @@
+pycache/
+app_old.py
+generate_db.py
+.venv/
