@@ -43,12 +43,12 @@ setx OPENAI_API_KEY "your-key-here"     # Windows   PowerShell
 Generate only SQL
 
 ```bash
-python main.py "Show the top 5 products by revenue"
+python main.py "List the top 5 customers by total spend in the last year"
 ```
 
 Generate sql and execute it against the sales db
 
 ```bash
-python main.py --execute "Show the top 5 customers by purchase amount" 
+python main.py --execute "List the top 5 customers by total spend in the last year" 
 ```
 
